@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enfermagem</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: sans-serif;
+        }
+
+        body {
+            background-color: #EEE;
+            padding-left: 10%;
+            padding-right: 10%;
+        }
+
+        header {
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 2px solid #222;
+            background-color: #494949;
+            color: #FFF;
+        }
+
+        nav {
+            margin-top: 25px;
+            padding-left: 10px;
+            /* background-color: #808080; */
+            width: 20%;
+            height: 100%;
+
+            float: left;
+            text-align: center;
+        }
+
+        ul {
+            margin-top: 20px;
+            text-align: left;
+            list-style: none;
+            margin-left: 10px;
+            line-height: 22px;
+        }
+
+        section {
+            background-color: #C0C0C0;
+            width: 80%;
+            float: left;
+        }
+
+        section h1 {
+            text-align: center;
+            padding: 15px;
+        }
+
+        section form {
+            padding: 15px;
+        }
+
+        td {
+            padding: 10px;
+        }
+
+        footer {
+            clear: both;
+            padding: 2rem;
+            text-align: center;
+            border-top: 2px solid #222;
+            background-color: #666;
+            color: #FFF;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Termos da Enfermagem</h1>
+    </header>
+
+    <main>
+        <nav>
+            <h2>Menu de Navegação</h2>
+            <ul>
+                <li><a href="cadastrar.html">Cadastrar</a></li>
+                <li><a href="index.html">Listar</a></li>
+            </ul>
+        </nav>
+
+        <section>
+            <h1>Termos</h1>
+            <!-- <div>
+                <center>
+                    <form>
+                        <label for="pesquisar">Pesquisar Termo:</label>
+                        <input name="pesquisar" id="pesquisar" placeholder="Digite para pesquisar..." />
+                        <select name="opcao-pesquisa" id="opcao-pesquisa">
+                            <option value="">Selecione uma opção</option>
+                            <option value="sigla">Sigla</option>
+                            <option value="descricao">Descrição</option>
+                        </select>
+                        <button onclick="pesquisar()">Pesquisar</button>
+                    </form>
+                </center>
+            </div> -->
+
+            <div>
+                <table border="1">
+                    <thead align="center">
+                        <tr>
+                            <td>Sigla</td>
+                            <td>Descrição</td>
+                            <td>Observação</td>
+                            <td>Imagem</td>
+                            <td>Ações</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <h4>Desenvolvido pela Turma T003</h4>
+        <p>SENAC - Patos de Minas/MG</p>
+    </footer>
+
+
+</body>
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getFirestore, addDoc, collection, getDocs, deleteDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyALMnoEtpls5wLJ7yiw7up7lt8i-EpfT1A",
+        authDomain: "enfermagem-897b2.firebaseapp.com",
+        projectId: "enfermagem-897b2",
+        storageBucket: "enfermagem-897b2.appspot.com",
+        messagingSenderId: "738288364345",
+        appId: "1:738288364345:web:ac2beaaacc77f9bf4ad6e8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+
+    async function addData() {
+
+        const name = document.querySelector('#name').value;
+        const email = document.querySelector('#email').value;
+
+        try {
+            const DocRef = await addDoc(collection(db, "users"), {
+                name: name,
+                email: email
+
+            })
+            notify.innerHTML = `Data Added `
+            document.querySelector('#name').value = "";
+            document.querySelector('#email').value = "";
+
+
+            setTimeout(() => {
+                notify.innerHTML = ""
+            }, 3000)
+
+            GetData()
+
+        } catch (eror) {
+            console.log(eror);
+        }
+
+    }
+    const addBtn = document.querySelector('#add_Data')
+
+    async function GetData() {
+        try {
+            const getDataQuery = await getDocs(collection(db, "termos"))
+            let html = "";
+
+            getDataQuery.forEach((doc) => {
+                const data = doc.data()
+
+                html += `
+                    <tr align="center">
+                        <td>
+                           <p>${data.sigla}</p>
+                        </td>
+                        <td>
+                           <p>${data.descricao}</p>
+                        </td>
+                        <td>
+                           <p>${data.observacao}</p>
+                        </td>
+                        <td>
+                           <img height="300" width="300" src=${data.url} alt=${data.sigla} />
+                        </td>
+                        <td>
+                            <button class="del_btn" onclick="deleteData('${doc.id}')">Excluir</button>
+                        </td>
+                    </tr>
+                `
+
+                //         html += `
+                //    <tr>
+                //        <td>${doc.id}</td>
+                //        <td>${data.name}</td>
+                //        <td>${data.email}</td>
+                //    <td><button class="up_btn"">Update</button></td>
+                //        <td><button class="del_btn" onclick="deleteData('${doc.id}')">Delete</button></td>
+                //    </tr>        
+                //   `
+
+            })
+            document.querySelector('tbody').innerHTML = html
+
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    window.deleteData = async function (id) {
+        try {
+            await deleteDoc(doc(db, "termos", id))
+            GetData()
+            alert('Excluído com sucesso')
+
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    GetData()
+
+</script>
+
+</html>
