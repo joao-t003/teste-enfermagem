@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="PT-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enfermagem</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        header {
+            background-color: #5cb85c;
+            padding: 30px;
+            color: #fff;
+        }
+
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .app {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #efefef;
+            padding: 20px 30px;
+            border-radius: 10px;
+            padding: 30px;
+
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+            color: red;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+
+        label {
+            margin-left: 10px;
+            margin-bottom: 10px;
+            font-weight: 700;
+
+        }
+
+        input {
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #333974;
+            color: #fff;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: 0.3s;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            opacity: 1;
+        }
+
+        .termo-list {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #555;
+        }
+
+        .termo {
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        img {
+            border-radius: 5px;
+        }
+
+        .complete {
+            background-color: #5cb85c;
+        }
+
+        .remove {
+            background-color: #d9534f;
+        }
+
+        .termo-form {
+            padding-bottom: 1.5rem;
+        }
+
+        input,
+        textarea,
+        select {
+            padding: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            width: 100%;
+        }
+
+        .filter,
+        .search,
+        .list {
+            border-bottom: 1px solid #555;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+        }
+
+        .filter-options {
+            display: flex;
+            justify-content: space-between;
+            gap: 3rem;
+        }
+
+        .filter-options div {
+            flex: 1 1 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Termos da Enfermagem</h1>
+    </header>
+
+    <div class='app'>
+        <div class='search'>
+            <div class='termo-form'>
+                <h2>Pesquisar Termos</h2>
+                <div class="form">
+                    <input placeholder="Digite a sigla" name="sigla" id="sigla_search" />
+                    <button id="pesquisarTermo">Pesquisar</button>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="list">
+            <h2>Lista de Termos</h2>
+            <span>
+                <div class='termo-list'>
+                    <div class='termo'>
+                        <div class='content'>
+                            <p>{termo.text}</p>
+                            <p class='category'> {termo.category}</p>
+                        </div>
+                        <div>
+                            <button class='remove'>Excluir</button>
+                        </div>
+                    </div>
+                </div>
+            </span>
+            <!-- </div> -->
+
+            <!-- TERMO FORM -->
+            <div class='termo-form'>
+                <h2>Cadastrar Termo</h2>
+                <div class="form">
+                    <div>
+                        <label for="sigla">Sigla</label>
+                        <input placeholder="Digite a sigla" name="sigla" id="sigla" />
+                    </div>
+
+                    <div>
+                        <label for="descricao">Descrição</label>
+                        <textarea id="descricao" name="descricao"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="observacao">Observação</label>
+                        <textarea id="observacao" name="observacao"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="imagem">Imagem</label>
+                        <input type="file" id="fileInput" accept="image/*">
+                    </div>
+                    <div>
+                        <button id="cadastrarTermo">Cadastrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <h4>Desenvolvido pela Turma T003</h4>
+        <p>SENAC - Patos de Minas/MG</p>
+    </footer>
+
+</body>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getFirestore, addDoc, collection, getDocs, deleteDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js";
+
+
+    // Paste in your Firebase config object here
+    const firebaseConfig = {
+        apiKey: "AIzaSyALMnoEtpls5wLJ7yiw7up7lt8i-EpfT1A",
+        authDomain: "enfermagem-897b2.firebaseapp.com",
+        projectId: "enfermagem-897b2",
+        storageBucket: "enfermagem-897b2.appspot.com",
+        messagingSenderId: "738288364345",
+        appId: "1:738288364345:web:ac2beaaacc77f9bf4ad6e8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    async function cadastrarTermo() {
+        const fileInput = document.getElementById("fileInput");
+        const file = fileInput.files[0];
+
+        const sigla = document.getElementById("sigla").value
+        const descricao = document.getElementById("descricao").value
+        const observacao = document.getElementById("observacao").value
+
+        if (!file) {
+            alert("Por favor adicione uma imagem");
+        } else {
+            const nome_arquivo = new Date()
+            const storageRef = ref(storage, `imagens_termos/${nome_arquivo}.png`);
+            await uploadBytes(storageRef, file);
+
+            const imageURL = await getDownloadURL(storageRef);
+
+            const objeto = { sigla, descricao, observacao, url: imageURL }
+            // console.log(objeto)
+            const DocRef = await addDoc(collection(db, "termos"), objeto)
+            buscarTermos()
+            alert("Salvo com sucesso")
+        }
+    }
+
+    async function pesquisarTermo() {
+        try {
+            const sigla_search = document.getElementById('sigla_search').value
+
+            const getDataQuery = await getDocs(collection(db, "termos"))
+
+
+            getDataQuery
+                .forEach((doc) => {
+                    const data = doc.data()
+
+
+                    if (data.sigla === sigla_search) {
+                        let html = "";
+                        html += `
+                            <div class='termo-list'>
+                               <div class='termo'>
+                                    <div class='content'>
+                                        <h3>${data.sigla}</h3>
+                                        <p class='category'>${data.descricao}</p>
+                                        <p>${data.observacao}</p>
+                                        <img width="90%" src=${data.url} alt=${data.sigla} />
+                                     </div>
+                                <div>
+                                <button class="remove" onclick="deleteData('${doc.id}')">Excluir</button>
+                            </div>
+                        `
+                        document.querySelector('span').innerHTML = html
+                    }
+                })
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+
+    async function buscarTermos() {
+        try {
+            const getDataQuery = await getDocs(collection(db, "termos"))
+            let html = "";
+
+            getDataQuery.forEach((doc) => {
+                const data = doc.data()
+
+                html += `
+                     <div class='termo-list'>
+                             <div class='termo'>
+                                 <div class='content'>
+                                     <h3>${data.sigla}</h3>
+                                     <p class='category'>${data.descricao}</p>
+                                     <p>${data.observacao}</p>
+                                     <img width="90%" src=${data.url} alt=${data.sigla} />
+                                 </div>
+                                 <div>
+                                     <button class="remove" onclick="deleteData('${doc.id}')">Excluir</button>
+                                 </div>
+                             </div>
+                         </div>
+                     `
+            })
+            document.querySelector('span').innerHTML = html
+
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+
+    window.deleteData = async function (id) {
+        try {
+            await deleteDoc(doc(db, "termos", id))
+            buscarTermos()
+            alert('Excluído com sucesso')
+
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+
+    buscarTermos()
+
+    const uploadButton = document.getElementById("cadastrarTermo");
+    uploadButton.addEventListener('click', cadastrarTermo);
+
+
+    const searchButton = document.getElementById("pesquisarTermo");
+    searchButton.addEventListener('click', pesquisarTermo);
+
+</script>
+
+</html>
